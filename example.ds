@@ -1,0 +1,19 @@
+foobar = func(a: int, b: int) -> int {
+	return a + b;
+}
+
+// patterns
+
+// func combined(a, b, c) {
+// 	return { a, b, c }
+// }
+//
+// (a, b) = (40, 60)
+//
+// c = combined(a, b, a + b)
+//
+// print(combined.a) // 40
+// print(combined.b) // 60
+// print(combined.c) // 100
+//
+// print("\(a) + \(b) = \(add(a, b))")
