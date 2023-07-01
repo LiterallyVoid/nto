@@ -1,4 +1,4 @@
-CGFLAGS = -Wall -Wextra -O0 -g -fsanitize=undefined
+CGFLAGS = -Wall -Wextra -O0 -g -fsanitize=undefined -fsanitize=address
 CFLAGS = $(CGFLAGS)
 LDFLAGS = $(CGFLAGS)
 

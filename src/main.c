@@ -4,36 +4,39 @@
 #include <stdbool.h>
 #include <assert.h>
 
-typedef struct Symbol Symbol;
+typedef struct Symbol *Symbol;
 struct Symbol {
-	Symbol *next;
+	Symbol next;
 
 	size_t len;
 	char data[];
 };
 
-Symbol *symbols = NULL;
+Symbol symbols = NULL;
 
-Symbol *symbolIntern(const char *data, size_t data_len) {
-	Symbol **it = &symbols;
+Symbol symbolIntern(const char *data, size_t data_len) {
+	Symbol *it = &symbols;
 
 	while (*it != NULL) {
-		if ((*it)->len == data_len && !memcmp((*it)->data, data, data_len)) return *it;
+		if ((*it)->len == data_len &&
+			!memcmp((*it)->data, data, data_len)) {
+
+			return *it;
+		}
 
 		it = &(*it)->next;
 	}
 
-	*it = malloc(sizeof(Symbol) + data_len);
+	*it = malloc(sizeof(**it) + data_len);
 
 	(*it)->next = NULL;
 	(*it)->len = data_len;
-
 	memcpy((*it)->data, data, data_len);
 
 	return *it;
 }
 
-Symbol *symbolInternNul(const char *str) {
+Symbol symbolInternNul(const char *str) {
 	return symbolIntern(str, strlen(str));
 }
 
@@ -75,7 +78,7 @@ typedef enum {
 	TOK_MAX_ENUM,
 } TokenKind;
 
-Symbol *token_kind_symbols[TOK_MAX_ENUM] = { 0 };
+Symbol token_kind_symbols[TOK_MAX_ENUM] = { 0 };
 static void initTokenKindSymbols(void) {
 	token_kind_symbols[TOK_PAREN_OPEN] = symbolInternNul("(");
 	token_kind_symbols[TOK_PAREN_CLOSE] = symbolInternNul(")");
@@ -90,8 +93,10 @@ static void initTokenKindSymbols(void) {
 	token_kind_symbols[TOK_SEMICOLON] = symbolInternNul(";");
 
 	token_kind_symbols[TOK_EQ] = symbolInternNul("=");
+
 	token_kind_symbols[TOK_PLUS] = symbolInternNul("+");
 	token_kind_symbols[TOK_DASH] = symbolInternNul("-");
+
 	token_kind_symbols[TOK_DASH_GT] = symbolInternNul("->");
 }
 
@@ -143,7 +148,7 @@ typedef struct {
 	TokenKind kind;
 	size_t len;
 
-	Symbol *symbol;
+	Symbol symbol;
 } Token;
 
 static bool isNameStart(char c) {
@@ -151,7 +156,7 @@ static bool isNameStart(char c) {
 }
 
 static bool isNameContinue(char c) {
-	return isNameStart(c) || (c >= '0' && c <= '9') || c == '-';
+	return isNameStart(c) || (c >= '0' && c <= '9');
 }
 
 void lexOne(const char *source, size_t source_len, Token *token) {
@@ -185,20 +190,28 @@ void lexOne(const char *source, size_t source_len, Token *token) {
 		}
 
 		token->len = len;
+
 		return;
 
 	} else if (isNameStart(source[0])) {
 		token->kind = TOK_NAME;
 
 		size_t len = 1;
-
 		while (len < source_len && isNameContinue(source[len])) {
 			len++;
 		}
 
 		token->len = len;
 
-		token->symbol = symbolIntern(source, len);
+		Symbol that_symbol = symbolIntern(source, len);
+		for (int i = 0; i < TOK_MAX_ENUM; i++) {
+			if (token_kind_symbols[i] != that_symbol) continue;
+
+			token->kind = i;
+			break;
+		}
+
+		token->symbol = that_symbol;
 		return;
 	}
 
@@ -208,7 +221,7 @@ void lexOne(const char *source, size_t source_len, Token *token) {
 	while ((token->len + 1) < source_len) {
 		bool found = false;
 
-		Symbol *that_symbol = symbolIntern(source, token->len + 1);
+		Symbol that_symbol = symbolIntern(source, token->len + 1);
 		for (int i = 0; i < TOK_MAX_ENUM; i++) {
 			if (token_kind_symbols[i] != that_symbol) continue;
 
