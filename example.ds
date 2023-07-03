@@ -1,11 +1,10 @@
-foobar = func(a: int, b: int) -> int {
-	return a + b;
-}
+foobar(50, 10 + 10, foo(bar), baz(quux))
+print(foobar)
 
 // patterns
 
 // func combined(a, b, c) {
-// 	return { a, b, c }
+	// 	return { a, b, c }
 // }
 //
 // (a, b) = (40, 60)
